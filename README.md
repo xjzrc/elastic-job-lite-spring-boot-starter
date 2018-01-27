@@ -1,6 +1,6 @@
- spring-boot-starter-elastic-job
+ elastic-job-spring-boot-starter
 ===================================
- spring-boot-starter-elastic-job
+ elastic-job-spring-boot-starter
 让你可以使用spring-boot的方式开发依赖elastic-job的程序
 
 *****
@@ -13,7 +13,7 @@
 ```xml
 <dependency>
     <groupId>com.zen.boot</groupId>
-    <artifactId>spring-boot-starter-elastic-job</artifactId>
+    <artifactId>elastic-job-spring-boot-starter</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 </dependency>
 ```
