@@ -15,6 +15,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
+        <elastic-job-lite.version>2.1.5</elastic-job-lite.version>
     </properties>
 
     <dependencies>
@@ -23,16 +24,29 @@
             <artifactId>spring-boot-starter</artifactId>
             <optional>true</optional>
         </dependency>
-        <!-- job -->
         <dependency>
-            <groupId>com.dangdang</groupId>
-            <artifactId>elastic-job-core</artifactId>
-            <version>1.0.8</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- import elastic-job lite core -->
+        <dependency>
             <groupId>com.dangdang</groupId>
-            <artifactId>elastic-job-spring</artifactId>
-            <version>1.0.8</version>
+            <artifactId>elastic-job-lite-core</artifactId>
+            <version>${elastic-job-lite.version}</version>
+        </dependency>
+
+        <!-- import other module if need -->
+        <dependency>
+            <groupId>com.dangdang</groupId>
+            <artifactId>elastic-job-lite-spring</artifactId>
+            <version>${elastic-job-lite.version}</version>
         </dependency>
     </dependencies>
 
@@ -79,5 +93,32 @@
             </plugin>
         </plugins>
     </build>
+
+    <repositories>
+        <repository>
+            <id>alfresco-maven-repo</id>
+            <url>https://maven.alfresco.com/nexus/content/groups/public/</url>
+        </repository>
+        <repository>
+            <id>java-net</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </repository>
+        <repository>
+            <id>terracotta-releases</id>
+            <url>http://terracotta.org/download/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </repository>
+    </repositories>
 
 </project>
