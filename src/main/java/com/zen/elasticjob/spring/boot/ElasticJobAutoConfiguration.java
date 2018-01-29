@@ -3,6 +3,7 @@ package com.zen.elasticjob.spring.boot;
 import com.dangdang.ddframe.job.api.ElasticJob;
 import com.dangdang.ddframe.job.api.JobType;
 import com.dangdang.ddframe.job.api.dataflow.DataflowJob;
+import com.dangdang.ddframe.job.api.script.ScriptJob;
 import com.dangdang.ddframe.job.api.simple.SimpleJob;
 import com.dangdang.ddframe.job.config.JobCoreConfiguration;
 import com.dangdang.ddframe.job.config.JobTypeConfiguration;
@@ -43,35 +44,31 @@ public class ElasticJobAutoConfiguration {
 
     @PostConstruct
     public void init() {
-
-        //初始化简单任务作业
-        initSimpleJob();
-
-        //初始化流水线任务作业
-        initDataflowJob();
-    }
-
-    /**
-     * 初始化简单任务作业
-     */
-    private void initSimpleJob() {
-        Map<String, SimpleJob> simpleJobMap = applicationContext.getBeansOfType(SimpleJob.class);
-        for (Map.Entry<String, SimpleJob> entry : simpleJobMap.entrySet()) {
-            SimpleJob simpleJob = entry.getValue();
-            ElasticJobConfig elasticJobConfig = simpleJob.getClass().getAnnotation(ElasticJobConfig.class);
-            new SpringJobScheduler(simpleJob, regCenter, getLiteJobConfiguration(JobType.SIMPLE, simpleJob.getClass(), elasticJobConfig)).init();
+        //获取作业任务
+        Map<String, ElasticJob> elasticJobMap = applicationContext.getBeansOfType(ElasticJob.class);
+        //循环解析任务
+        for (ElasticJob elasticJob : elasticJobMap.values()) {
+            Class<? extends ElasticJob> jobClass = elasticJob.getClass();
+            //注册作业任务
+            new SpringJobScheduler(elasticJob, regCenter, getLiteJobConfiguration(getJobType(elasticJob), jobClass, jobClass.getAnnotation(ElasticJobConfig.class))).init();
         }
     }
 
     /**
-     * 初始化流水线任务作业
+     * 获取作业任务类型
+     *
+     * @param elasticJob 作业任务
+     * @return JobType
      */
-    private void initDataflowJob() {
-        Map<String, DataflowJob> dataflowJobMap = applicationContext.getBeansOfType(DataflowJob.class);
-        for (Map.Entry<String, DataflowJob> entry : dataflowJobMap.entrySet()) {
-            DataflowJob dataflowJob = entry.getValue();
-            ElasticJobConfig elasticJobConfig = dataflowJob.getClass().getAnnotation(ElasticJobConfig.class);
-            new SpringJobScheduler(dataflowJob, regCenter, getLiteJobConfiguration(JobType.DATAFLOW, dataflowJob.getClass(), elasticJobConfig)).init();
+    private JobType getJobType(ElasticJob elasticJob) {
+        if (elasticJob instanceof SimpleJob) {
+            return JobType.SIMPLE;
+        } else if (elasticJob instanceof DataflowJob) {
+            return JobType.DATAFLOW;
+        } else if (elasticJob instanceof ScriptJob) {
+            return JobType.SIMPLE;
+        } else {
+            throw new RuntimeException("unknown JobType!");
         }
     }
 
