@@ -83,7 +83,7 @@ public class ElasticJobAutoConfiguration {
      * @return JobCoreConfiguration
      */
     private JobCoreConfiguration getJobCoreConfiguration(String jobName, ElasticJobConfig elasticJobConfig) {
-        JobCoreConfiguration.Builder builder = JobCoreConfiguration.newBuilder(jobName, StringUtils.defaultIfBlank(elasticJobConfig.cron(), elasticJobConfig.value()), elasticJobConfig.shardingTotalCount())
+        JobCoreConfiguration.Builder builder = JobCoreConfiguration.newBuilder(jobName, elasticJobConfig.cron(), elasticJobConfig.shardingTotalCount())
                 .shardingItemParameters(elasticJobConfig.shardingItemParameters())
                 .jobParameter(elasticJobConfig.jobParameter())
                 .failover(elasticJobConfig.failover())
