@@ -1,4 +1,4 @@
-package com.zen.spring.boot.annotation;
+package com.zen.elasticjob.spring.boot.annotation;
 
 import com.dangdang.ddframe.job.api.JobType;
 import org.springframework.core.annotation.AliasFor;

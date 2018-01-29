@@ -1,4 +1,4 @@
-package com.zen.spring.boot;
+package com.zen.elasticjob.spring.boot;
 
 import com.dangdang.ddframe.job.api.ElasticJob;
 import com.dangdang.ddframe.job.config.JobCoreConfiguration;
@@ -9,7 +9,7 @@ import com.dangdang.ddframe.job.executor.handler.JobProperties.JobPropertiesEnum
 import com.dangdang.ddframe.job.lite.config.LiteJobConfiguration;
 import com.dangdang.ddframe.job.lite.spring.api.SpringJobScheduler;
 import com.dangdang.ddframe.job.reg.zookeeper.ZookeeperRegistryCenter;
-import com.zen.spring.boot.annotation.ElasticJobConfig;
+import com.zen.elasticjob.spring.boot.annotation.ElasticJobConfig;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;

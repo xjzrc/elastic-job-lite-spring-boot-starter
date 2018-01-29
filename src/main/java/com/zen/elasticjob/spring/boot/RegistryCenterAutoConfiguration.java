@@ -1,4 +1,4 @@
-package com.zen.spring.boot;
+package com.zen.elasticjob.spring.boot;
 
 import com.dangdang.ddframe.job.reg.zookeeper.ZookeeperConfiguration;
 import com.dangdang.ddframe.job.reg.zookeeper.ZookeeperRegistryCenter;

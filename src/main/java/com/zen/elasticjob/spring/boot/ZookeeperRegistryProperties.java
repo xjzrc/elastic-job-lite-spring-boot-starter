@@ -1,4 +1,4 @@
-package com.zen.spring.boot;
+package com.zen.elasticjob.spring.boot;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
