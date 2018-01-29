@@ -8,7 +8,7 @@
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
-    <name>spring-boot-starter-elastic-job</name>
+    <name>elastic-job-spring-boot-starter</name>
     <description>Elastic Job Spring Boot Starter</description>
     <url>https://github.com/xjzrc/elastic-job-spring-boot-starter</url>
 
