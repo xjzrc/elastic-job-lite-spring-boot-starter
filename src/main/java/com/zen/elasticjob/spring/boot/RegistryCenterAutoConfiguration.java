@@ -22,7 +22,7 @@ public class RegistryCenterAutoConfiguration {
     @Autowired
     private ZookeeperRegistryProperties regCenterProperties;
 
-    @Bean
+    @Bean(initMethod = "init")
     @ConditionalOnMissingBean
     public ZookeeperRegistryCenter regCenter() {
         ZookeeperConfiguration zookeeperConfiguration = new ZookeeperConfiguration(regCenterProperties.getServerLists(), regCenterProperties.getNamespace());
