@@ -8,6 +8,7 @@ import com.dangdang.ddframe.job.api.simple.SimpleJob;
 import com.dangdang.ddframe.job.config.JobCoreConfiguration;
 import com.dangdang.ddframe.job.config.JobTypeConfiguration;
 import com.dangdang.ddframe.job.config.dataflow.DataflowJobConfiguration;
+import com.dangdang.ddframe.job.config.script.ScriptJobConfiguration;
 import com.dangdang.ddframe.job.config.simple.SimpleJobConfiguration;
 import com.dangdang.ddframe.job.event.rdb.JobEventRdbConfiguration;
 import com.dangdang.ddframe.job.executor.handler.JobProperties.JobPropertiesEnum;
@@ -136,17 +137,8 @@ public class ElasticJobAutoConfiguration {
         JobCoreConfiguration jobCoreConfiguration = getJobCoreConfiguration(jobClass.getName(), elasticJobConfig);
 
         //构建任务类型配置
-        JobTypeConfiguration jobTypeConfiguration = null;
-        switch (jobType) {
-            case DATAFLOW:
-                jobTypeConfiguration = new DataflowJobConfiguration(jobCoreConfiguration, jobClass.getCanonicalName(), elasticJobConfig.streamingProcess());
-                break;
-            case SCRIPT:
-                break;
-            case SIMPLE:
-            default:
-                jobTypeConfiguration = new SimpleJobConfiguration(jobCoreConfiguration, jobClass.getCanonicalName());
-        }
+        JobTypeConfiguration jobTypeConfiguration = getJobTypeConfiguration(jobCoreConfiguration, jobType, jobClass.getCanonicalName(),
+                elasticJobConfig.streamingProcess(), elasticJobConfig.scriptCommandLine());
 
         //构建Lite作业
         return LiteJobConfiguration.newBuilder(Objects.requireNonNull(jobTypeConfiguration))
@@ -158,6 +150,29 @@ public class ElasticJobAutoConfiguration {
                 .disabled(elasticJobConfig.disabled())
                 .overwrite(elasticJobConfig.overwrite()).build();
 
+    }
+
+    /**
+     * 获取任务类型配置
+     *
+     * @param jobCoreConfiguration 作业核心配置
+     * @param jobType              作业类型
+     * @param jobClass             作业类
+     * @param streamingProcess     是否流式处理数据
+     * @param scriptCommandLine    脚本型作业执行命令行
+     * @return JobTypeConfiguration
+     */
+    private JobTypeConfiguration getJobTypeConfiguration(JobCoreConfiguration jobCoreConfiguration, JobType jobType,
+                                                         String jobClass, boolean streamingProcess, String scriptCommandLine) {
+        switch (jobType) {
+            case DATAFLOW:
+                return new DataflowJobConfiguration(jobCoreConfiguration, jobClass, streamingProcess);
+            case SCRIPT:
+                return new ScriptJobConfiguration(jobCoreConfiguration, scriptCommandLine);
+            case SIMPLE:
+            default:
+                return new SimpleJobConfiguration(jobCoreConfiguration, jobClass);
+        }
     }
 
 }
