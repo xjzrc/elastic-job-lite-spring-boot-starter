@@ -15,9 +15,7 @@ import com.dangdang.ddframe.job.lite.spring.api.SpringJobScheduler;
 import com.dangdang.ddframe.job.reg.zookeeper.ZookeeperRegistryCenter;
 import com.zen.elasticjob.spring.boot.annotation.ElasticJobConfig;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -25,7 +23,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.PostConstruct;
-import java.lang.annotation.Annotation;
+import javax.annotation.Resource;
 import java.util.Map;
 import java.util.Objects;
 
@@ -36,7 +34,7 @@ import java.util.Objects;
 @AutoConfigureAfter(RegistryCenterAutoConfiguration.class)
 public class ElasticJobAutoConfiguration {
 
-    @Autowired
+    @Resource
     private ZookeeperRegistryCenter regCenter;
 
     @Autowired
