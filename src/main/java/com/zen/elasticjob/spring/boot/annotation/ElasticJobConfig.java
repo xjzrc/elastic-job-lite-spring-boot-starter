@@ -1,6 +1,7 @@
 package com.zen.elasticjob.spring.boot.annotation;
 
 import com.dangdang.ddframe.job.api.JobType;
+import org.springframework.core.annotation.AliasFor;
 import org.springframework.stereotype.Component;
 
 import java.lang.annotation.*;
@@ -11,20 +12,20 @@ import java.lang.annotation.*;
 @Component
 public @interface ElasticJobConfig {
 
+    @AliasFor("cron")
+    String value() default "";
+
+    /**
+     * cron表达式，用于控制作业触发时间
+     */
+    @AliasFor("value")
+    String cron() default "";
+
     /**
      * 任务类型JobType
      * SIMPLE，DATAFLOW和SCRIPT
      */
     JobType jonType() default JobType.SIMPLE;
-
-    /**
-     * 作业名称
-    String jobName();*/
-
-    /**
-     * cron表达式，用于控制作业触发时间
-     */
-    String cron();
 
     /**
      * 作业分片总
@@ -59,12 +60,6 @@ public @interface ElasticJobConfig {
     boolean misfire() default true;
 
     /**
-     * 本地配置是否可覆盖注册中心配置.
-     * 如果可覆盖, 每次启动作业都以本地配置为准.
-     */
-    boolean overwrite() default true;
-
-    /**
      * 作业描述信息.
      */
     String description() default "";
@@ -73,13 +68,13 @@ public @interface ElasticJobConfig {
      * 配置jobProperties定义的枚举控制Elastic-Job的实现细节
      * JOB_EXCEPTION_HANDLER用于扩展异常处理类
      */
-    String jobExceptionHandler() default "";
+    String jobExceptionHandler();
 
     /**
      * 配置jobProperties定义的枚举控制Elastic-Job的实现细节
      * EXECUTOR_SERVICE_HANDLER用于扩展作业处理线程池类
      */
-    String executorServiceHandler() default "";
+    String executorServiceHandler();
 
     /**
      * 是否流式处理数据
@@ -92,4 +87,11 @@ public @interface ElasticJobConfig {
      * 脚本型作业执行命令行
      */
     String scriptCommandLine() default "";
+
+
+    /**
+     * 本地配置是否可覆盖注册中心配置.
+     * 如果可覆盖, 每次启动作业都以本地配置为准.
+     */
+    boolean overwrite() default true;
 }
