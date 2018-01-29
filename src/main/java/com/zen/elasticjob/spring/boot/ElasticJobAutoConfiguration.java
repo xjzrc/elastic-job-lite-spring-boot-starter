@@ -10,6 +10,7 @@ import com.dangdang.ddframe.job.lite.config.LiteJobConfiguration;
 import com.dangdang.ddframe.job.lite.spring.api.SpringJobScheduler;
 import com.dangdang.ddframe.job.reg.zookeeper.ZookeeperRegistryCenter;
 import com.zen.elasticjob.spring.boot.annotation.ElasticJobConfig;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -63,7 +64,7 @@ public class ElasticJobAutoConfiguration implements BeanPostProcessor {
      * @return JobCoreConfiguration
      */
     private JobCoreConfiguration getJobCoreConfiguration(final Class<? extends ElasticJob> jobClass, ElasticJobConfig elasticJobConfig) {
-        return JobCoreConfiguration.newBuilder(jobClass.getName(), elasticJobConfig.cron(), elasticJobConfig.shardingTotalCount())
+        return JobCoreConfiguration.newBuilder(jobClass.getName(), StringUtils.defaultIfBlank(elasticJobConfig.cron(), elasticJobConfig.value()), elasticJobConfig.shardingTotalCount())
                 .shardingItemParameters(elasticJobConfig.shardingItemParameters())
                 .jobParameter(elasticJobConfig.jobParameter())
                 .failover(elasticJobConfig.failover())
