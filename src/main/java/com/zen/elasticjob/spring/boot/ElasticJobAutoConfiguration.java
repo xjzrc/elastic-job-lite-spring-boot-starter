@@ -9,6 +9,7 @@ import com.dangdang.ddframe.job.config.JobCoreConfiguration;
 import com.dangdang.ddframe.job.config.JobTypeConfiguration;
 import com.dangdang.ddframe.job.config.dataflow.DataflowJobConfiguration;
 import com.dangdang.ddframe.job.config.simple.SimpleJobConfiguration;
+import com.dangdang.ddframe.job.event.rdb.JobEventRdbConfiguration;
 import com.dangdang.ddframe.job.executor.handler.JobProperties.JobPropertiesEnum;
 import com.dangdang.ddframe.job.lite.config.LiteJobConfiguration;
 import com.dangdang.ddframe.job.lite.spring.api.SpringJobScheduler;
@@ -24,6 +25,7 @@ import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import javax.sql.DataSource;
 import java.util.Map;
 import java.util.Objects;
 
@@ -47,9 +49,36 @@ public class ElasticJobAutoConfiguration {
         //循环解析任务
         for (ElasticJob elasticJob : elasticJobMap.values()) {
             Class<? extends ElasticJob> jobClass = elasticJob.getClass();
-            //注册作业任务
-            new SpringJobScheduler(elasticJob, regCenter, getLiteJobConfiguration(getJobType(elasticJob), jobClass, jobClass.getAnnotation(ElasticJobConfig.class))).init();
+            //获取作业任务注解配置
+            ElasticJobConfig elasticJobConfig = jobClass.getAnnotation(ElasticJobConfig.class);
+            //获取Lite作业配置
+            LiteJobConfiguration liteJobConfiguration = getLiteJobConfiguration(getJobType(elasticJob), jobClass, elasticJobConfig);
+            //获取作业事件追踪的数据源配置
+            JobEventRdbConfiguration jobEventRdbConfiguration = getJobEventRdbConfiguration(elasticJobConfig.eventTraceRdbDataSource());
+            //注册作业
+            if (Objects.isNull(jobEventRdbConfiguration)) {
+                new SpringJobScheduler(elasticJob, regCenter, liteJobConfiguration).init();
+            } else {
+                new SpringJobScheduler(elasticJob, regCenter, liteJobConfiguration, jobEventRdbConfiguration).init();
+            }
         }
+    }
+
+    /**
+     * 获取作业事件追踪的数据源配置
+     *
+     * @param eventTraceRdbDataSource 作业事件追踪的数据源Bean引用
+     * @return JobEventRdbConfiguration
+     */
+    private JobEventRdbConfiguration getJobEventRdbConfiguration(String eventTraceRdbDataSource) {
+        if (StringUtils.isBlank(eventTraceRdbDataSource)) {
+            return null;
+        }
+        if (!applicationContext.containsBean(eventTraceRdbDataSource)) {
+            throw new RuntimeException("not exist datasource [" + eventTraceRdbDataSource + "] !");
+        }
+        DataSource dataSource = (DataSource) applicationContext.getBean(eventTraceRdbDataSource);
+        return new JobEventRdbConfiguration(dataSource);
     }
 
     /**
@@ -121,6 +150,12 @@ public class ElasticJobAutoConfiguration {
 
         //构建Lite作业
         return LiteJobConfiguration.newBuilder(Objects.requireNonNull(jobTypeConfiguration))
+                .monitorExecution(elasticJobConfig.monitorExecution())
+                .monitorPort(elasticJobConfig.monitorPort())
+                .maxTimeDiffSeconds(elasticJobConfig.maxTimeDiffSeconds())
+                .jobShardingStrategyClass(elasticJobConfig.jobShardingStrategyClass())
+                .reconcileIntervalMinutes(elasticJobConfig.reconcileIntervalMinutes())
+                .disabled(elasticJobConfig.disabled())
                 .overwrite(elasticJobConfig.overwrite()).build();
 
     }
