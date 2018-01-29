@@ -12,16 +12,14 @@ import java.lang.annotation.*;
 @Component
 public @interface ElasticJobConfig {
 
+    @AliasFor("cron")
+    String value() default "";
+
     /**
      * cron表达式，用于控制作业触发时间
      */
-    String cron();
-
-    /**
-     * 任务类型JobType
-     * SIMPLE，DATAFLOW和SCRIPT
-     */
-    JobType jobType();
+    @AliasFor("value")
+    String cron() default "";
 
     /**
      * 作业分片总
