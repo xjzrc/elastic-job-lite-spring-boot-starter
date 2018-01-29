@@ -68,13 +68,13 @@ public @interface ElasticJobConfig {
      * 配置jobProperties定义的枚举控制Elastic-Job的实现细节
      * JOB_EXCEPTION_HANDLER用于扩展异常处理类
      */
-    String jobExceptionHandler();
+    String jobExceptionHandler() default "";
 
     /**
      * 配置jobProperties定义的枚举控制Elastic-Job的实现细节
      * EXECUTOR_SERVICE_HANDLER用于扩展作业处理线程池类
      */
-    String executorServiceHandler();
+    String executorServiceHandler() default "";
 
     /**
      * 是否流式处理数据
