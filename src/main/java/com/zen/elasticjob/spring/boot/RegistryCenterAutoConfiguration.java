@@ -1,8 +1,12 @@
 package com.zen.elasticjob.spring.boot;
 
+import com.dangdang.ddframe.job.api.ElasticJob;
 import com.dangdang.ddframe.job.reg.zookeeper.ZookeeperConfiguration;
 import com.dangdang.ddframe.job.reg.zookeeper.ZookeeperRegistryCenter;
+import com.zen.elasticjob.spring.boot.annotation.ElasticJobConfig;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +20,8 @@ import org.springframework.context.annotation.Configuration;
  * To change this template use File | Settings | File Templates.
  */
 @Configuration
+@ConditionalOnClass(ElasticJob.class)
+@ConditionalOnBean(annotation = ElasticJobConfig.class)
 @EnableConfigurationProperties(ZookeeperRegistryProperties.class)
 public class RegistryCenterAutoConfiguration {
 
