@@ -5,7 +5,7 @@
 
     <groupId>com.zen.elasticjob.spring.boot</groupId>
     <artifactId>spring-boot-starter-elastic-job</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
 
     <name>spring-boot-starter-elastic-job</name>
