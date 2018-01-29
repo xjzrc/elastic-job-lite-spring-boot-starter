@@ -64,15 +64,19 @@ public class ElasticJobAutoConfiguration implements BeanPostProcessor {
      * @return JobCoreConfiguration
      */
     private JobCoreConfiguration getJobCoreConfiguration(final Class<? extends ElasticJob> jobClass, ElasticJobConfig elasticJobConfig) {
-        return JobCoreConfiguration.newBuilder(jobClass.getName(), StringUtils.defaultIfBlank(elasticJobConfig.cron(), elasticJobConfig.value()), elasticJobConfig.shardingTotalCount())
+        JobCoreConfiguration.Builder builder = JobCoreConfiguration.newBuilder(jobClass.getName(), elasticJobConfig.cron(), elasticJobConfig.shardingTotalCount())
                 .shardingItemParameters(elasticJobConfig.shardingItemParameters())
                 .jobParameter(elasticJobConfig.jobParameter())
                 .failover(elasticJobConfig.failover())
                 .misfire(elasticJobConfig.misfire())
-                .description(elasticJobConfig.description())
-                .jobProperties(JobPropertiesEnum.JOB_EXCEPTION_HANDLER.getKey(), elasticJobConfig.jobExceptionHandler())
-                .jobProperties(JobPropertiesEnum.EXECUTOR_SERVICE_HANDLER.getKey(), elasticJobConfig.executorServiceHandler())
-                .build();
+                .description(elasticJobConfig.description());
+        if (StringUtils.isNotBlank(elasticJobConfig.jobExceptionHandler())) {
+            builder.jobProperties(JobPropertiesEnum.JOB_EXCEPTION_HANDLER.getKey(), elasticJobConfig.jobExceptionHandler());
+        }
+        if (StringUtils.isNotBlank(elasticJobConfig.executorServiceHandler())) {
+            builder.jobProperties(JobPropertiesEnum.EXECUTOR_SERVICE_HANDLER.getKey(), elasticJobConfig.executorServiceHandler());
+        }
+        return builder.build();
     }
 
     /**
@@ -89,7 +93,7 @@ public class ElasticJobAutoConfiguration implements BeanPostProcessor {
 
         //构建任务类型配置
         JobTypeConfiguration jobTypeConfiguration = null;
-        switch (elasticJobConfig.jonType()) {
+        switch (elasticJobConfig.jobType()) {
             case DATAFLOW:
                 jobTypeConfiguration = new DataflowJobConfiguration(jobCoreConfiguration, jobClass.getCanonicalName(), elasticJobConfig.streamingProcess());
                 break;
