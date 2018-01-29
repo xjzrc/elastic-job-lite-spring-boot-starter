@@ -12,9 +12,9 @@
 根据实际情况依赖最新版本
 ```xml
 <dependency>
-    <groupId>com.zen.elasticjob.spring.boot</groupId>
+    <groupId>com.zen.spring.boot</groupId>
     <artifactId>elastic-job-spring-boot-starter</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 
