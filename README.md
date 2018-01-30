@@ -5,7 +5,7 @@
 
 *****
 
-### 使用步骤
+### 使用步骤(示例:[「spring-boot=starter-demo」](https://github.com/xjzrc/spring-boot-starter-demo))
 
 * 在`spring boot`项目的`pom.xml`中添加以下依赖：
 
@@ -21,7 +21,7 @@
 * 在application.properties添加elasticjob的相关配置信息,样例配置如下:
 
 ```properties
-spring.elasticjob.zookeeper.serverLists=127.0.0.1
+spring.elasticjob.zookeeper.serverLists=127.0.0.1:2181
 spring.elasticjob.zookeeper.namespace=elastic-job-spring-boot-stater-demo
 ```
 
@@ -29,7 +29,7 @@ spring.elasticjob.zookeeper.namespace=elastic-job-spring-boot-stater-demo
 
 Simple作业配置
 ```java
-@ElasticJobConfig(cron = "0/2 * * * * ?")
+@ElasticJobConfig(cron = "0/2 * * * * ?", shardingTotalCount = 3, shardingItemParameters = "0=Beijing,1=Shanghai,2=Guangzhou")
 public class SpringSimpleJob implements SimpleJob {
 
     @Resource
@@ -49,7 +49,7 @@ public class SpringSimpleJob implements SimpleJob {
 
 dataflow作业配置
 ```java
-@ElasticJobConfig(cron = "0/2 * * * * ?")
+@ElasticJobConfig(cron = "0/2 * * * * ?", shardingTotalCount = 3, shardingItemParameters = "0=Beijing,1=Shanghai,2=Guangzhou")
 public class SpringDataflowJob implements DataflowJob<Foo> {
 
     @Resource
