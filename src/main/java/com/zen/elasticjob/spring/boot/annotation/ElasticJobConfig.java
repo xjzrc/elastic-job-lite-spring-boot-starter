@@ -1,12 +1,17 @@
 package com.zen.elasticjob.spring.boot.annotation;
 
+
+
 import org.springframework.stereotype.Component;
 
 import java.lang.annotation.*;
 
 /**
- * 作业配置，具体参见文档
- * http://elasticjob.io/docs/elastic-job-lite/02-guide/config-manual
+ * 作业配置，具体参见文档 http://elasticjob.io/docs/elastic-job-lite/02-guide/config-manual
+ *
+ * @author xinjingziranchan@gmail.com
+ * @version 1.0.0
+ * @since 1.0.0
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

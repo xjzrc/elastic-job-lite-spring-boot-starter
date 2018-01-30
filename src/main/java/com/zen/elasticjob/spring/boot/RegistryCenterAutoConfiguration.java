@@ -13,11 +13,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Created with IntelliJ IDEA.
- * User: jinjing
- * Date: 2018/1/28
- * Time: 下午1:15
- * To change this template use File | Settings | File Templates.
+ * 注册中心
+ *
+ * @author xinjingziranchan@gmail.com
+ * @version 1.0.0
+ * @since 1.0.0
  */
 @Configuration
 @ConditionalOnClass(ElasticJob.class)

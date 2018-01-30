@@ -1,16 +1,14 @@
 package com.zen.elasticjob.spring.boot;
 
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Created with IntelliJ IDEA.
- * User: zen
- * Date: 2018/1/28
- * Time: 下午12:59
  * 用于注册和协调作业分布式行为的组件，目前仅支持Zookeeper
+ *
+ * @author xinjingziranchan@gmail.com
+ * @version 1.0.0
+ * @since 1.0.0
  */
-@Data
 @ConfigurationProperties(prefix = "spring.elasticjob.zookeeper")
 public class ZookeeperRegistryProperties {
 
@@ -61,4 +59,68 @@ public class ZookeeperRegistryProperties {
      * 缺省为不需要权限验
      */
     private String digest;
+
+    public String getServerLists() {
+        return serverLists;
+    }
+
+    public void setServerLists(String serverLists) {
+        this.serverLists = serverLists;
+    }
+
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+    }
+
+    public int getBaseSleepTimeMilliseconds() {
+        return baseSleepTimeMilliseconds;
+    }
+
+    public void setBaseSleepTimeMilliseconds(int baseSleepTimeMilliseconds) {
+        this.baseSleepTimeMilliseconds = baseSleepTimeMilliseconds;
+    }
+
+    public int getMaxSleepTimeMilliseconds() {
+        return maxSleepTimeMilliseconds;
+    }
+
+    public void setMaxSleepTimeMilliseconds(int maxSleepTimeMilliseconds) {
+        this.maxSleepTimeMilliseconds = maxSleepTimeMilliseconds;
+    }
+
+    public int getMaxRetries() {
+        return maxRetries;
+    }
+
+    public void setMaxRetries(int maxRetries) {
+        this.maxRetries = maxRetries;
+    }
+
+    public int getConnectionTimeoutMilliseconds() {
+        return connectionTimeoutMilliseconds;
+    }
+
+    public void setConnectionTimeoutMilliseconds(int connectionTimeoutMilliseconds) {
+        this.connectionTimeoutMilliseconds = connectionTimeoutMilliseconds;
+    }
+
+    public int getSessionTimeoutMilliseconds() {
+        return sessionTimeoutMilliseconds;
+    }
+
+    public void setSessionTimeoutMilliseconds(int sessionTimeoutMilliseconds) {
+        this.sessionTimeoutMilliseconds = sessionTimeoutMilliseconds;
+    }
+
+    public String getDigest() {
+        return digest;
+    }
+
+    public void setDigest(String digest) {
+        this.digest = digest;
+    }
 }

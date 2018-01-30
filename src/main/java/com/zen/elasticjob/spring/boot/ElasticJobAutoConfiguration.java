@@ -30,7 +30,13 @@ import javax.sql.DataSource;
 import java.util.Map;
 import java.util.Objects;
 
-
+/**
+ * 作业任务配置
+ *
+ * @author xinjingziranchan@gmail.com
+ * @version 1.0.0
+ * @since 1.0.0
+ */
 @Configuration
 @ConditionalOnClass(ElasticJob.class)
 @ConditionalOnBean(annotation = ElasticJobConfig.class)
