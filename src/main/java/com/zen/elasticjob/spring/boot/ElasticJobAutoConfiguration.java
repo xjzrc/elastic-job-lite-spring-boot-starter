@@ -205,17 +205,19 @@ public class ElasticJobAutoConfiguration {
 
         //注册每台作业节点均执行的监听
         Class<? extends ElasticJobListener> listener = elasticJobConfig.listener();
+        //判断是否配置了监听者
         if (!listener.isInterface()) {
+            //判断监听者是否已经在spring容器中存在
             Object bean = getBean(listener.getSimpleName());
-
             ElasticJobListener elasticJobListener = Objects.isNull(bean) ? registerElasticJobListener(listener) : (ElasticJobListener) bean;
-
             elasticJobListeners.add(elasticJobListener);
         }
 
         //分布式场景中仅单一节点执行的监听
         Class<? extends AbstractDistributeOnceElasticJobListener> distributedListener = elasticJobConfig.distributedListener();
+        //判断是否配置了监听者
         if (!Objects.equals(distributedListener, AbstractDistributeOnceElasticJobListener.class)) {
+            //判断监听者是否已经在spring容器中存在
             Object bean = getBean(distributedListener.getSimpleName());
             AbstractDistributeOnceElasticJobListener distributeOnceElasticJobListener = Objects.isNull(bean) ?
                     registerAbstractDistributeOnceElasticJobListener(distributedListener, elasticJobConfig.startedTimeoutMilliseconds(), elasticJobConfig.completedTimeoutMilliseconds()) :
