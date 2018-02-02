@@ -1,7 +1,8 @@
 package com.zen.elasticjob.spring.boot.annotation;
 
 
-
+import com.dangdang.ddframe.job.lite.api.listener.AbstractDistributeOnceElasticJobListener;
+import com.dangdang.ddframe.job.lite.api.listener.ElasticJobListener;
 import org.springframework.stereotype.Component;
 
 import java.lang.annotation.*;
@@ -136,4 +137,30 @@ public @interface ElasticJobConfig {
      * 可用于部署作业时，先禁止启动，部署结束后统一启动
      */
     boolean disabled() default false;
+
+    /**
+     * 每台作业节点均执行的监听
+     * 若作业处理作业服务器的文件，处理完成后删除文件，可考虑使用每个节点均执行清理任务。
+     * 此类型任务实现简单，且无需考虑全局分布式任务是否完成，请尽量使用此类型监听器。
+     */
+    Class<? extends ElasticJobListener> listener() default ElasticJobListener.class;
+
+    /**
+     * 分布式场景中仅单一节点执行的监听
+     * 若作业处理数据库数据，处理完成后只需一个节点完成数据清理任务即可。
+     * 此类型任务处理复杂，需同步分布式环境下作业的状态同步，提供了超时设置来避免作业不同步导致的死锁，请谨慎使用。
+     */
+    Class<? extends AbstractDistributeOnceElasticJobListener> distributedListener() default AbstractDistributeOnceElasticJobListener.class;
+
+    /**
+     * 最后一个作业执行前的执行方法的超时时间
+     * 单位：毫秒
+     */
+    long startedTimeoutMilliseconds() default Long.MAX_VALUE;
+
+    /**
+     * 最后一个作业执行后的执行方法的超时时间
+     * 单位：毫秒
+     */
+    long completedTimeoutMilliseconds() default Long.MAX_VALUE;
 }

@@ -10,25 +10,35 @@ import com.dangdang.ddframe.job.config.JobTypeConfiguration;
 import com.dangdang.ddframe.job.config.dataflow.DataflowJobConfiguration;
 import com.dangdang.ddframe.job.config.script.ScriptJobConfiguration;
 import com.dangdang.ddframe.job.config.simple.SimpleJobConfiguration;
+import com.dangdang.ddframe.job.event.JobEventConfiguration;
 import com.dangdang.ddframe.job.event.rdb.JobEventRdbConfiguration;
 import com.dangdang.ddframe.job.executor.handler.JobProperties.JobPropertiesEnum;
+import com.dangdang.ddframe.job.lite.api.listener.AbstractDistributeOnceElasticJobListener;
+import com.dangdang.ddframe.job.lite.api.listener.ElasticJobListener;
 import com.dangdang.ddframe.job.lite.config.LiteJobConfiguration;
 import com.dangdang.ddframe.job.lite.spring.api.SpringJobScheduler;
 import com.dangdang.ddframe.job.reg.zookeeper.ZookeeperRegistryCenter;
 import com.zen.elasticjob.spring.boot.annotation.ElasticJobConfig;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.sql.DataSource;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+
+import static com.dangdang.ddframe.job.lite.spring.job.parser.common.BaseJobBeanDefinitionParserTag.CLASS_ATTRIBUTE;
 
 /**
  * 作业任务配置
@@ -62,11 +72,14 @@ public class ElasticJobAutoConfiguration {
             LiteJobConfiguration liteJobConfiguration = getLiteJobConfiguration(getJobType(elasticJob), jobClass, elasticJobConfig);
             //获取作业事件追踪的数据源配置
             JobEventRdbConfiguration jobEventRdbConfiguration = getJobEventRdbConfiguration(elasticJobConfig.eventTraceRdbDataSource());
+            //获取作业监听器
+            ElasticJobListener[] elasticJobListeners = creatElasticJobListeners(elasticJobConfig);
+            elasticJobListeners = Objects.isNull(elasticJobListeners) ? new ElasticJobListener[0] : elasticJobListeners;
             //注册作业
             if (Objects.isNull(jobEventRdbConfiguration)) {
-                new SpringJobScheduler(elasticJob, regCenter, liteJobConfiguration).init();
+                new SpringJobScheduler(elasticJob, regCenter, liteJobConfiguration, elasticJobListeners).init();
             } else {
-                new SpringJobScheduler(elasticJob, regCenter, liteJobConfiguration, jobEventRdbConfiguration).init();
+                new SpringJobScheduler(elasticJob, regCenter, liteJobConfiguration, jobEventRdbConfiguration, elasticJobListeners).init();
             }
         }
     }
@@ -178,6 +191,102 @@ public class ElasticJobAutoConfiguration {
             case SIMPLE:
             default:
                 return new SimpleJobConfiguration(jobCoreConfiguration, jobClass);
+        }
+    }
+
+    /**
+     * 获取监听器
+     *
+     * @param elasticJobConfig 任务配置
+     * @return ElasticJobListener[]
+     */
+    private ElasticJobListener[] creatElasticJobListeners(ElasticJobConfig elasticJobConfig) {
+        List<ElasticJobListener> elasticJobListeners = new ArrayList<>(2);
+
+        //注册每台作业节点均执行的监听
+        Class<? extends ElasticJobListener> listener = elasticJobConfig.listener();
+        if (!listener.isInterface()) {
+            Object bean = getBean(listener.getSimpleName());
+
+            ElasticJobListener elasticJobListener = Objects.isNull(bean) ? registerElasticJobListener(listener) : (ElasticJobListener) bean;
+
+            elasticJobListeners.add(elasticJobListener);
+        }
+
+        //分布式场景中仅单一节点执行的监听
+        Class<? extends AbstractDistributeOnceElasticJobListener> distributedListener = elasticJobConfig.distributedListener();
+        if (!Objects.equals(distributedListener, AbstractDistributeOnceElasticJobListener.class)) {
+            Object bean = getBean(distributedListener.getSimpleName());
+            AbstractDistributeOnceElasticJobListener distributeOnceElasticJobListener = Objects.isNull(bean) ?
+                    registerAbstractDistributeOnceElasticJobListener(distributedListener, elasticJobConfig.startedTimeoutMilliseconds(), elasticJobConfig.completedTimeoutMilliseconds()) :
+                    (AbstractDistributeOnceElasticJobListener) bean;
+            elasticJobListeners.add(distributeOnceElasticJobListener);
+        }
+
+        if (CollectionUtils.isEmpty(elasticJobListeners)) {
+            return null;
+        }
+
+        //集合转数组
+        ElasticJobListener[] elasticJobListenerArray = new ElasticJobListener[elasticJobListeners.size()];
+        for (int i = 0; i < elasticJobListeners.size(); i++) {
+            elasticJobListenerArray[i] = elasticJobListeners.get(i);
+        }
+        return elasticJobListenerArray;
+    }
+
+    /**
+     * 注册每台作业节点均执行的监听到spring容器
+     *
+     * @param listener 监听者
+     * @return ElasticJobListener
+     */
+    private ElasticJobListener registerElasticJobListener(Class<? extends ElasticJobListener> listener) {
+        BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.rootBeanDefinition(listener);
+        beanDefinitionBuilder.setScope(BeanDefinition.SCOPE_PROTOTYPE);
+        getDefaultListableBeanFactory().registerBeanDefinition(listener.getSimpleName(), beanDefinitionBuilder.getBeanDefinition());
+        return applicationContext.getBean(listener.getSimpleName(), listener);
+    }
+
+    /**
+     * 注册分布式监听者到spring容器
+     *
+     * @param distributedListener          监听者
+     * @param startedTimeoutMilliseconds   最后一个作业执行前的执行方法的超时时间 单位：毫秒
+     * @param completedTimeoutMilliseconds 最后一个作业执行后的执行方法的超时时间 单位：毫秒
+     * @return AbstractDistributeOnceElasticJobListener
+     */
+    private AbstractDistributeOnceElasticJobListener registerAbstractDistributeOnceElasticJobListener(Class<? extends AbstractDistributeOnceElasticJobListener> distributedListener,
+                                                                                                      long startedTimeoutMilliseconds,
+                                                                                                      long completedTimeoutMilliseconds) {
+        BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.rootBeanDefinition(distributedListener);
+        beanDefinitionBuilder.setScope(BeanDefinition.SCOPE_PROTOTYPE);
+        beanDefinitionBuilder.addConstructorArgValue(startedTimeoutMilliseconds);
+        beanDefinitionBuilder.addConstructorArgValue(completedTimeoutMilliseconds);
+        getDefaultListableBeanFactory().registerBeanDefinition(distributedListener.getSimpleName(), beanDefinitionBuilder.getBeanDefinition());
+        return applicationContext.getBean(distributedListener.getSimpleName(), distributedListener);
+    }
+
+    /**
+     * 获取beanFactory
+     *
+     * @return DefaultListableBeanFactory
+     */
+    private DefaultListableBeanFactory getDefaultListableBeanFactory() {
+        return (DefaultListableBeanFactory) ((ConfigurableApplicationContext) applicationContext).getBeanFactory();
+    }
+
+    /**
+     * 获取bean
+     *
+     * @param name bean名称
+     * @return Object
+     */
+    private Object getBean(String name) {
+        try {
+            return applicationContext.getBean(name);
+        } catch (BeansException e) {
+            return null;
         }
     }
 
