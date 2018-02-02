@@ -204,25 +204,16 @@ public class ElasticJobAutoConfiguration {
         List<ElasticJobListener> elasticJobListeners = new ArrayList<>(2);
 
         //注册每台作业节点均执行的监听
-        Class<? extends ElasticJobListener> listener = elasticJobConfig.listener();
-        //判断是否配置了监听者
-        if (!listener.isInterface()) {
-            //判断监听者是否已经在spring容器中存在
-            Object bean = getBean(listener.getSimpleName());
-            ElasticJobListener elasticJobListener = Objects.isNull(bean) ? registerElasticJobListener(listener) : (ElasticJobListener) bean;
+        ElasticJobListener elasticJobListener = creatElasticJobListener(elasticJobConfig.listener());
+        if (Objects.nonNull(elasticJobListener)) {
             elasticJobListeners.add(elasticJobListener);
         }
 
-        //分布式场景中仅单一节点执行的监听
-        Class<? extends AbstractDistributeOnceElasticJobListener> distributedListener = elasticJobConfig.distributedListener();
-        //判断是否配置了监听者
-        if (!Objects.equals(distributedListener, AbstractDistributeOnceElasticJobListener.class)) {
-            //判断监听者是否已经在spring容器中存在
-            Object bean = getBean(distributedListener.getSimpleName());
-            AbstractDistributeOnceElasticJobListener distributeOnceElasticJobListener = Objects.isNull(bean) ?
-                    registerAbstractDistributeOnceElasticJobListener(distributedListener, elasticJobConfig.startedTimeoutMilliseconds(), elasticJobConfig.completedTimeoutMilliseconds()) :
-                    (AbstractDistributeOnceElasticJobListener) bean;
-            elasticJobListeners.add(distributeOnceElasticJobListener);
+        //注册分布式监听者
+        AbstractDistributeOnceElasticJobListener distributedListener = creatAbstractDistributeOnceElasticJobListener(elasticJobConfig.distributedListener(),
+                elasticJobConfig.startedTimeoutMilliseconds(), elasticJobConfig.completedTimeoutMilliseconds());
+        if (Objects.nonNull(distributedListener)) {
+            elasticJobListeners.add(distributedListener);
         }
 
         if (CollectionUtils.isEmpty(elasticJobListeners)) {
@@ -235,6 +226,48 @@ public class ElasticJobAutoConfiguration {
             elasticJobListenerArray[i] = elasticJobListeners.get(i);
         }
         return elasticJobListenerArray;
+    }
+
+    /**
+     * 创建每台作业节点均执行的监听
+     *
+     * @param listener 监听者
+     * @return ElasticJobListener
+     */
+    private ElasticJobListener creatElasticJobListener(Class<? extends ElasticJobListener> listener) {
+        //判断是否配置了监听者
+        if (listener.isInterface()) {
+            return null;
+        }
+        //判断监听者是否已经在spring容器中存在
+        if (applicationContext.containsBean(listener.getSimpleName())) {
+            return applicationContext.getBean(listener.getSimpleName(), ElasticJobListener.class);
+        }
+        //不存在则创建并注册到Spring容器中
+        return registerElasticJobListener(listener);
+    }
+
+    /**
+     * 创建分布式监听者到spring容器
+     *
+     * @param distributedListener          监听者
+     * @param startedTimeoutMilliseconds   最后一个作业执行前的执行方法的超时时间 单位：毫秒
+     * @param completedTimeoutMilliseconds 最后一个作业执行后的执行方法的超时时间 单位：毫秒
+     * @return AbstractDistributeOnceElasticJobListener
+     */
+    private AbstractDistributeOnceElasticJobListener creatAbstractDistributeOnceElasticJobListener(Class<? extends AbstractDistributeOnceElasticJobListener> distributedListener,
+                                                                                                   long startedTimeoutMilliseconds,
+                                                                                                   long completedTimeoutMilliseconds) {
+        //判断是否配置了监听者
+        if (Objects.equals(distributedListener, AbstractDistributeOnceElasticJobListener.class)) {
+            return null;
+        }
+        //判断监听者是否已经在spring容器中存在
+        if (applicationContext.containsBean(distributedListener.getSimpleName())) {
+            return applicationContext.getBean(distributedListener.getSimpleName(), AbstractDistributeOnceElasticJobListener.class);
+        }
+        //不存在则创建并注册到Spring容器中
+        return registerAbstractDistributeOnceElasticJobListener(distributedListener, startedTimeoutMilliseconds, completedTimeoutMilliseconds);
     }
 
     /**
@@ -276,20 +309,6 @@ public class ElasticJobAutoConfiguration {
      */
     private DefaultListableBeanFactory getDefaultListableBeanFactory() {
         return (DefaultListableBeanFactory) ((ConfigurableApplicationContext) applicationContext).getBeanFactory();
-    }
-
-    /**
-     * 获取bean
-     *
-     * @param name bean名称
-     * @return Object
-     */
-    private Object getBean(String name) {
-        try {
-            return applicationContext.getBean(name);
-        } catch (BeansException e) {
-            return null;
-        }
     }
 
 }
