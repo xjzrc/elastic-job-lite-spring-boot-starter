@@ -1,6 +1,6 @@
- elastic-job-spring-boot-starter
+ elastic-job-lite-spring-boot-starter
 ===================================
- elastic-job-spring-boot-starter
+ elastic-job-lite-spring-boot-starter
 让你可以使用spring-boot的方式开发依赖elastic-job的程序
 
 *****
