@@ -5,7 +5,7 @@
 
 *****
 
-### 使用步骤(示例:[「spring-boot=starter-demo」](https://github.com/xjzrc/spring-boot-starter-demo))
+### 使用步骤(示例:[「spring-boot-starter-demo」](https://github.com/xjzrc/spring-boot-starter-demo))
 
 * 在`spring boot`项目的`pom.xml`中添加以下依赖：
 
