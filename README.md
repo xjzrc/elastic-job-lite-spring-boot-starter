@@ -13,7 +13,7 @@
 ```xml
 <dependency>
     <groupId>com.zen.spring.boot</groupId>
-    <artifactId>elastic-job-spring-boot-starter</artifactId>
+    <artifactId>elastic-job-lite-spring-boot-starter</artifactId>
     <version>1.0.0</version>
 </dependency>
 ```

@@ -4,13 +4,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.zen.spring.boot</groupId>
-    <artifactId>elastic-job-spring-boot-starter</artifactId>
+    <artifactId>elastic-job-lite-spring-boot-starter</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
-    <name>elastic-job-spring-boot-starter</name>
-    <description>Elastic Job Spring Boot Starter</description>
-    <url>https://github.com/xjzrc/elastic-job-spring-boot-starter</url>
+    <name>elastic-job-lite-spring-boot-starter</name>
+    <description>Elastic Job Lite Spring Boot Starter</description>
+    <url>https://github.com/xjzrc/elastic-job-lite-spring-boot-starter</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
