@@ -25,7 +25,7 @@ spring.elasticjob.zookeeper.serverLists=127.0.0.1:2181
 spring.elasticjob.zookeeper.namespace=elastic-job-spring-boot-stater-demo
 ```
 
-* 编写你的作业服务,只需要添加要发布的服务实现上添加`@ElasticJobConfig`（import com.zen.elasticjob.spring.boot.annotation.ElasticJobConfig）注解 ,其中cron是作业执行时间.
+* 编写你的作业服务,只需在作业任务类上添加`@ElasticJobConfig`（import com.zen.elasticjob.spring.boot.annotation.ElasticJobConfig）注解 ,其中cron是作业执行时间.
 
 Simple作业配置
 ```java
