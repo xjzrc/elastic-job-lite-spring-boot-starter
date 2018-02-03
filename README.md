@@ -12,7 +12,7 @@
 根据实际情况依赖最新版本
 ```xml
 <dependency>
-    <groupId>com.zen.spring.boot</groupId>
+    <groupId>com.github.xjzrc.spring.boot</groupId>
     <artifactId>elastic-job-lite-spring-boot-starter</artifactId>
     <version>1.0.0</version>
 </dependency>
