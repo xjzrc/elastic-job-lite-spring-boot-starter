@@ -178,8 +178,8 @@
     </licenses>
 
     <scm>
-        <url>https://github.com/xjzrc/elastic-job-lite-spring-boot-starter</url>
-        <connection>https://github.com/xjzrc/elastic-job-lite-spring-boot-starter.git</connection>
+        <url>scm:git:https://github.com/xjzrc/elastic-job-lite-spring-boot-starter.git</url>
+        <connection>scm:git:git@github.com:xjzrc/elastic-job-lite-spring-boot-starter.git</connection>
         <developerConnection>https://github.com/xjzrc</developerConnection>
     </scm>
 
