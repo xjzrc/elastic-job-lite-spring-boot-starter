@@ -10,7 +10,6 @@ import com.dangdang.ddframe.job.config.JobTypeConfiguration;
 import com.dangdang.ddframe.job.config.dataflow.DataflowJobConfiguration;
 import com.dangdang.ddframe.job.config.script.ScriptJobConfiguration;
 import com.dangdang.ddframe.job.config.simple.SimpleJobConfiguration;
-import com.dangdang.ddframe.job.event.JobEventConfiguration;
 import com.dangdang.ddframe.job.event.rdb.JobEventRdbConfiguration;
 import com.dangdang.ddframe.job.executor.handler.JobProperties.JobPropertiesEnum;
 import com.dangdang.ddframe.job.lite.api.listener.AbstractDistributeOnceElasticJobListener;
@@ -20,7 +19,6 @@ import com.dangdang.ddframe.job.lite.spring.api.SpringJobScheduler;
 import com.dangdang.ddframe.job.reg.zookeeper.ZookeeperRegistryCenter;
 import com.zen.elasticjob.spring.boot.annotation.ElasticJobConfig;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
@@ -36,9 +34,10 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.sql.DataSource;
-import java.util.*;
-
-import static com.dangdang.ddframe.job.lite.spring.job.parser.common.BaseJobBeanDefinitionParserTag.CLASS_ATTRIBUTE;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * 作业任务配置
@@ -74,9 +73,9 @@ public class ElasticJobAutoConfiguration {
             JobEventRdbConfiguration jobEventRdbConfiguration = getJobEventRdbConfiguration(elasticJobConfig.eventTraceRdbDataSource());
             //获取作业监听器
             ElasticJobListener[] elasticJobListeners = creatElasticJobListeners(elasticJobConfig);
-            elasticJobListeners = Objects.isNull(elasticJobListeners) ? new ElasticJobListener[0] : elasticJobListeners;
+            elasticJobListeners = null == elasticJobListeners ? new ElasticJobListener[0] : elasticJobListeners;
             //注册作业
-            if (Objects.isNull(jobEventRdbConfiguration)) {
+            if (null == jobEventRdbConfiguration) {
                 new SpringJobScheduler(elasticJob, regCenter, liteJobConfiguration, elasticJobListeners).init();
             } else {
                 new SpringJobScheduler(elasticJob, regCenter, liteJobConfiguration, jobEventRdbConfiguration, elasticJobListeners).init();
@@ -205,14 +204,14 @@ public class ElasticJobAutoConfiguration {
 
         //注册每台作业节点均执行的监听
         ElasticJobListener elasticJobListener = creatElasticJobListener(elasticJobConfig.listener());
-        if (Objects.nonNull(elasticJobListener)) {
+        if (null != elasticJobListener) {
             elasticJobListeners.add(elasticJobListener);
         }
 
         //注册分布式监听者
         AbstractDistributeOnceElasticJobListener distributedListener = creatAbstractDistributeOnceElasticJobListener(elasticJobConfig.distributedListener(),
                 elasticJobConfig.startedTimeoutMilliseconds(), elasticJobConfig.completedTimeoutMilliseconds());
-        if (Objects.nonNull(distributedListener)) {
+        if (null != distributedListener) {
             elasticJobListeners.add(distributedListener);
         }
 
