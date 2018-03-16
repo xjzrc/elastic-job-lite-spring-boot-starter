@@ -72,3 +72,11 @@ public class SpringDataflowJob implements DataflowJob<Foo> {
     }
 }
 ```
+script作业配置(# need absolute path)
+```java
+@ElasticJobConfig(cron = "0/2 * * * * ?", shardingTotalCount = 3,
+        shardingItemParameters = "0=Beijing,1=Shanghai,2=Guangzhou",
+        scriptCommandLine = "yourPath/spring-boot-starter-demo/elastic-job-spring-boot-starter-demo/src/main/resources/script/demo.sh")
+public class SpringScripJob implements ScriptJob {
+}
+```

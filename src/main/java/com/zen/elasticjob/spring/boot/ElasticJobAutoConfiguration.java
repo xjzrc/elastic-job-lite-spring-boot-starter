@@ -67,8 +67,15 @@ public class ElasticJobAutoConfiguration {
             Class<? extends ElasticJob> jobClass = elasticJob.getClass();
             //获取作业任务注解配置
             ElasticJobConfig elasticJobConfig = jobClass.getAnnotation(ElasticJobConfig.class);
+            //获取作业类型
+            JobType jobType = getJobType(elasticJob);
+            //对脚本类型做特殊处理，具体原因请查看：com.dangdang.ddframe.job.executor.JobExecutorFactory.getJobExecutor
+            //当获取脚本作业执行器时，ElasticJob实例对象必须为空
+            if (Objects.equals(JobType.SCRIPT, jobType)) {
+                elasticJob = null;
+            }
             //获取Lite作业配置
-            LiteJobConfiguration liteJobConfiguration = getLiteJobConfiguration(getJobType(elasticJob), jobClass, elasticJobConfig);
+            LiteJobConfiguration liteJobConfiguration = getLiteJobConfiguration(jobType, jobClass, elasticJobConfig);
             //获取作业事件追踪的数据源配置
             JobEventRdbConfiguration jobEventRdbConfiguration = getJobEventRdbConfiguration(elasticJobConfig.eventTraceRdbDataSource());
             //获取作业监听器
@@ -112,7 +119,7 @@ public class ElasticJobAutoConfiguration {
         } else if (elasticJob instanceof DataflowJob) {
             return JobType.DATAFLOW;
         } else if (elasticJob instanceof ScriptJob) {
-            return JobType.SIMPLE;
+            return JobType.SCRIPT;
         } else {
             throw new RuntimeException("unknown JobType [" + elasticJob.getClass() + "]!");
         }
