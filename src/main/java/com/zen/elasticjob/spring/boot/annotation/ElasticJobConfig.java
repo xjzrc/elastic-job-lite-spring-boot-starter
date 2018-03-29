@@ -1,8 +1,6 @@
 package com.zen.elasticjob.spring.boot.annotation;
 
 
-import com.dangdang.ddframe.job.lite.api.listener.AbstractDistributeOnceElasticJobListener;
-import com.dangdang.ddframe.job.lite.api.listener.ElasticJobListener;
 import org.springframework.stereotype.Component;
 
 import java.lang.annotation.*;
@@ -30,9 +28,9 @@ public @interface ElasticJobConfig {
     /**
      * 作业分片总
      *
-     * @return int
+     * @return String
      */
-    int shardingTotalCount() default 1;
+    String shardingTotalCount() default "1";
 
     /**
      * 分片序列号和个性化参数对照表.
@@ -58,16 +56,16 @@ public @interface ElasticJobConfig {
      * 是否开启任务执行失效转移，开启表示如果作业在一次任务执行中途宕机，
      * 允许将该次未完成的任务在另一作业节点上补偿执行
      *
-     * @return boolean
+     * @return String
      */
-    boolean failover() default false;
+    String failover() default "false";
 
     /**
      * 是否开启错过任务重新执行
      *
-     * @return boolean
+     * @return String
      */
-    boolean misfire() default true;
+    String misfire() default "true";
 
     /**
      * 作业描述信息.
@@ -97,9 +95,9 @@ public @interface ElasticJobConfig {
      * 如果流式处理数据, 则fetchData不返回空结果将持续执行作业
      * 如果非流式处理数据, 则处理数据完成后作业结
      *
-     * @return boolean
+     * @return String
      */
-    boolean streamingProcess() default false;
+    String streamingProcess() default "false";
 
     /**
      * 脚本型作业执行命令行
@@ -116,25 +114,25 @@ public @interface ElasticJobConfig {
      *
      * @return String
      */
-    boolean monitorExecution() default true;
+    String monitorExecution() default "true";
 
     /**
      * 作业监控端口
      * 建议配置作业监控端口, 方便开发者dump作业信息。
      * 使用方法: echo “dump” | nc 127.0.0.1 9888
      *
-     * @return int
+     * @return String
      */
-    int monitorPort() default -1;
+    String monitorPort() default "-1";
 
     /**
      * 最大允许的本机与注册中心的时间误差秒数
      * 如果时间误差超过配置秒数则作业启动时将抛异常
      * 配置为-1表示不校验时间误差
      *
-     * @return int
+     * @return String
      */
-    int maxTimeDiffSeconds() default -1;
+    String maxTimeDiffSeconds() default "-1";
 
     /**
      * 作业分片策略实现类全路径
@@ -149,9 +147,9 @@ public @interface ElasticJobConfig {
      * 修复作业服务器不一致状态服务调度间隔时间，配置为小于1的任意值表示不执行修复
      * 单位：分钟
      *
-     * @return int
+     * @return String
      */
-    int reconcileIntervalMinutes() default 10;
+    String reconcileIntervalMinutes() default "10";
 
     /**
      * 作业事件追踪的数据源Bean引用
@@ -166,7 +164,7 @@ public @interface ElasticJobConfig {
      *
      * @return boolean
      */
-    boolean overwrite() default true;
+    String overwrite() default "true";
 
     /**
      * 作业是否禁止启动
@@ -174,39 +172,43 @@ public @interface ElasticJobConfig {
      *
      * @return boolean
      */
-    boolean disabled() default false;
+    String disabled() default "false";
 
     /**
      * 每台作业节点均执行的监听
      * 若作业处理作业服务器的文件，处理完成后删除文件，可考虑使用每个节点均执行清理任务。
      * 此类型任务实现简单，且无需考虑全局分布式任务是否完成，请尽量使用此类型监听器。
      *
-     * @return Class
+     * <p>注意：类必须继承com.dangdang.ddframe.job.lite.api.listener.ElasticJobListener</p>
+     *
+     * @return String
      */
-    Class<? extends ElasticJobListener> listener() default ElasticJobListener.class;
+    String listenerClass() default "";
 
     /**
      * 分布式场景中仅单一节点执行的监听
      * 若作业处理数据库数据，处理完成后只需一个节点完成数据清理任务即可。
      * 此类型任务处理复杂，需同步分布式环境下作业的状态同步，提供了超时设置来避免作业不同步导致的死锁，请谨慎使用。
      *
-     * @return Class
+     * <p>注意：类必须继承com.dangdang.ddframe.job.lite.api.listener.AbstractDistributeOnceElasticJobListener</p>
+     *
+     * @return String
      */
-    Class<? extends AbstractDistributeOnceElasticJobListener> distributedListener() default AbstractDistributeOnceElasticJobListener.class;
+    String distributedListenerClass() default "";
 
     /**
      * 最后一个作业执行前的执行方法的超时时间
      * 单位：毫秒
      *
-     * @return long
+     * @return String
      */
-    long startedTimeoutMilliseconds() default Long.MAX_VALUE;
+    String startedTimeoutMilliseconds() default "";
 
     /**
      * 最后一个作业执行后的执行方法的超时时间
      * 单位：毫秒
      *
-     * @return long
+     * @return String
      */
-    long completedTimeoutMilliseconds() default Long.MAX_VALUE;
+    String completedTimeoutMilliseconds() default "";
 }

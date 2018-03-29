@@ -28,12 +28,15 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.EmbeddedValueResolverAware;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringValueResolver;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.sql.DataSource;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -50,13 +53,20 @@ import java.util.Objects;
 @ConditionalOnClass(ElasticJob.class)
 @ConditionalOnBean(annotation = ElasticJobConfig.class)
 @AutoConfigureAfter(RegistryCenterAutoConfiguration.class)
-public class ElasticJobAutoConfiguration {
+public class ElasticJobAutoConfiguration implements EmbeddedValueResolverAware {
 
     @Resource
     private ZookeeperRegistryCenter regCenter;
 
     @Autowired
     private ApplicationContext applicationContext;
+
+    private StringValueResolver embeddedValueResolver;
+
+    @Override
+    public void setEmbeddedValueResolver(StringValueResolver resolver) {
+        this.embeddedValueResolver = resolver;
+    }
 
     @PostConstruct
     public void init() {
@@ -126,29 +136,6 @@ public class ElasticJobAutoConfiguration {
     }
 
     /**
-     * 构建任务核心配置
-     *
-     * @param jobName          任务执行名称
-     * @param elasticJobConfig 任务配置
-     * @return JobCoreConfiguration
-     */
-    private JobCoreConfiguration getJobCoreConfiguration(String jobName, ElasticJobConfig elasticJobConfig) {
-        JobCoreConfiguration.Builder builder = JobCoreConfiguration.newBuilder(jobName, elasticJobConfig.cron(), elasticJobConfig.shardingTotalCount())
-                .shardingItemParameters(elasticJobConfig.shardingItemParameters())
-                .jobParameter(elasticJobConfig.jobParameter())
-                .failover(elasticJobConfig.failover())
-                .misfire(elasticJobConfig.misfire())
-                .description(elasticJobConfig.description());
-        if (StringUtils.isNotBlank(elasticJobConfig.jobExceptionHandler())) {
-            builder.jobProperties(JobPropertiesEnum.JOB_EXCEPTION_HANDLER.getKey(), elasticJobConfig.jobExceptionHandler());
-        }
-        if (StringUtils.isNotBlank(elasticJobConfig.executorServiceHandler())) {
-            builder.jobProperties(JobPropertiesEnum.EXECUTOR_SERVICE_HANDLER.getKey(), elasticJobConfig.executorServiceHandler());
-        }
-        return builder.build();
-    }
-
-    /**
      * 构建Lite作业
      *
      * @param jobType          任务类型
@@ -163,18 +150,41 @@ public class ElasticJobAutoConfiguration {
 
         //构建任务类型配置
         JobTypeConfiguration jobTypeConfiguration = getJobTypeConfiguration(jobCoreConfiguration, jobType, jobClass.getCanonicalName(),
-                elasticJobConfig.streamingProcess(), elasticJobConfig.scriptCommandLine());
+                resolver2Boolean(elasticJobConfig.streamingProcess()), resolver(elasticJobConfig.scriptCommandLine()));
 
         //构建Lite作业
         return LiteJobConfiguration.newBuilder(Objects.requireNonNull(jobTypeConfiguration))
-                .monitorExecution(elasticJobConfig.monitorExecution())
-                .monitorPort(elasticJobConfig.monitorPort())
-                .maxTimeDiffSeconds(elasticJobConfig.maxTimeDiffSeconds())
-                .jobShardingStrategyClass(elasticJobConfig.jobShardingStrategyClass())
-                .reconcileIntervalMinutes(elasticJobConfig.reconcileIntervalMinutes())
-                .disabled(elasticJobConfig.disabled())
-                .overwrite(elasticJobConfig.overwrite()).build();
+                .monitorExecution(resolver2Boolean(elasticJobConfig.monitorExecution()))
+                .monitorPort(resolver2Int(elasticJobConfig.monitorPort()))
+                .maxTimeDiffSeconds(resolver2Int(elasticJobConfig.maxTimeDiffSeconds()))
+                .jobShardingStrategyClass(resolver(elasticJobConfig.jobShardingStrategyClass()))
+                .reconcileIntervalMinutes(resolver2Int(elasticJobConfig.reconcileIntervalMinutes()))
+                .disabled(resolver2Boolean(elasticJobConfig.disabled()))
+                .overwrite(resolver2Boolean(elasticJobConfig.overwrite())).build();
 
+    }
+
+    /**
+     * 构建任务核心配置
+     *
+     * @param jobName          任务执行名称
+     * @param elasticJobConfig 任务配置
+     * @return JobCoreConfiguration
+     */
+    private JobCoreConfiguration getJobCoreConfiguration(String jobName, ElasticJobConfig elasticJobConfig) {
+        JobCoreConfiguration.Builder builder = JobCoreConfiguration.newBuilder(jobName, resolver(elasticJobConfig.cron()), resolver2Int(elasticJobConfig.shardingTotalCount()))
+                .shardingItemParameters(resolver(elasticJobConfig.shardingItemParameters()))
+                .jobParameter(resolver(elasticJobConfig.jobParameter()))
+                .failover(resolver2Boolean(elasticJobConfig.failover()))
+                .misfire(resolver2Boolean(elasticJobConfig.misfire()))
+                .description(resolver(elasticJobConfig.description()));
+        if (StringUtils.isNotBlank(elasticJobConfig.jobExceptionHandler())) {
+            builder.jobProperties(JobPropertiesEnum.JOB_EXCEPTION_HANDLER.getKey(), resolver(elasticJobConfig.jobExceptionHandler()));
+        }
+        if (StringUtils.isNotBlank(elasticJobConfig.executorServiceHandler())) {
+            builder.jobProperties(JobPropertiesEnum.EXECUTOR_SERVICE_HANDLER.getKey(), resolver(elasticJobConfig.executorServiceHandler()));
+        }
+        return builder.build();
     }
 
     /**
@@ -210,14 +220,14 @@ public class ElasticJobAutoConfiguration {
         List<ElasticJobListener> elasticJobListeners = new ArrayList<>(2);
 
         //注册每台作业节点均执行的监听
-        ElasticJobListener elasticJobListener = creatElasticJobListener(elasticJobConfig.listener());
+        ElasticJobListener elasticJobListener = registerElasticJobListener(resolver(elasticJobConfig.listenerClass()));
         if (null != elasticJobListener) {
             elasticJobListeners.add(elasticJobListener);
         }
 
         //注册分布式监听者
-        AbstractDistributeOnceElasticJobListener distributedListener = creatAbstractDistributeOnceElasticJobListener(elasticJobConfig.distributedListener(),
-                elasticJobConfig.startedTimeoutMilliseconds(), elasticJobConfig.completedTimeoutMilliseconds());
+        AbstractDistributeOnceElasticJobListener distributedListener = registerAbstractDistributeOnceElasticJobListener(resolver(elasticJobConfig.distributedListenerClass()),
+                resolver2Long(elasticJobConfig.startedTimeoutMilliseconds()), resolver2Long(elasticJobConfig.completedTimeoutMilliseconds()));
         if (null != distributedListener) {
             elasticJobListeners.add(distributedListener);
         }
@@ -237,75 +247,70 @@ public class ElasticJobAutoConfiguration {
     /**
      * 创建每台作业节点均执行的监听
      *
-     * @param listener 监听者
+     * @param listenerClass 监听者
      * @return ElasticJobListener
      */
-    private ElasticJobListener creatElasticJobListener(Class<? extends ElasticJobListener> listener) {
+    private ElasticJobListener registerElasticJobListener(String listenerClass) {
+
         //判断是否配置了监听者
-        if (listener.isInterface()) {
+        if (StringUtils.isBlank(listenerClass)) {
             return null;
         }
+
         //判断监听者是否已经在spring容器中存在
-        if (applicationContext.containsBean(listener.getSimpleName())) {
-            return applicationContext.getBean(listener.getSimpleName(), ElasticJobListener.class);
+        if (applicationContext.containsBean(listenerClass)) {
+            return applicationContext.getBean(listenerClass, ElasticJobListener.class);
         }
+
         //不存在则创建并注册到Spring容器中
-        return registerElasticJobListener(listener);
+        try {
+            Class<? extends ElasticJobListener> listener = (Class<? extends ElasticJobListener>) Class.forName(listenerClass);
+            BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.rootBeanDefinition(listener);
+            beanDefinitionBuilder.setScope(BeanDefinition.SCOPE_PROTOTYPE);
+            getDefaultListableBeanFactory().registerBeanDefinition(listenerClass, beanDefinitionBuilder.getBeanDefinition());
+            return applicationContext.getBean(listenerClass, listener);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(MessageFormat.format("ClassNotFound: {0}!", listenerClass));
+        } catch (Exception ex) {
+            throw new RuntimeException(MessageFormat.format("{0} must extends ElasticJobListener!", listenerClass));
+        }
     }
 
     /**
      * 创建分布式监听者到spring容器
      *
-     * @param distributedListener          监听者
+     * @param distributedListenerClass     监听者
      * @param startedTimeoutMilliseconds   最后一个作业执行前的执行方法的超时时间 单位：毫秒
      * @param completedTimeoutMilliseconds 最后一个作业执行后的执行方法的超时时间 单位：毫秒
      * @return AbstractDistributeOnceElasticJobListener
      */
-    private AbstractDistributeOnceElasticJobListener creatAbstractDistributeOnceElasticJobListener(Class<? extends AbstractDistributeOnceElasticJobListener> distributedListener,
-                                                                                                   long startedTimeoutMilliseconds,
-                                                                                                   long completedTimeoutMilliseconds) {
-        //判断是否配置了监听者
-        if (Objects.equals(distributedListener, AbstractDistributeOnceElasticJobListener.class)) {
-            return null;
-        }
-        //判断监听者是否已经在spring容器中存在
-        if (applicationContext.containsBean(distributedListener.getSimpleName())) {
-            return applicationContext.getBean(distributedListener.getSimpleName(), AbstractDistributeOnceElasticJobListener.class);
-        }
-        //不存在则创建并注册到Spring容器中
-        return registerAbstractDistributeOnceElasticJobListener(distributedListener, startedTimeoutMilliseconds, completedTimeoutMilliseconds);
-    }
-
-    /**
-     * 注册每台作业节点均执行的监听到spring容器
-     *
-     * @param listener 监听者
-     * @return ElasticJobListener
-     */
-    private ElasticJobListener registerElasticJobListener(Class<? extends ElasticJobListener> listener) {
-        BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.rootBeanDefinition(listener);
-        beanDefinitionBuilder.setScope(BeanDefinition.SCOPE_PROTOTYPE);
-        getDefaultListableBeanFactory().registerBeanDefinition(listener.getSimpleName(), beanDefinitionBuilder.getBeanDefinition());
-        return applicationContext.getBean(listener.getSimpleName(), listener);
-    }
-
-    /**
-     * 注册分布式监听者到spring容器
-     *
-     * @param distributedListener          监听者
-     * @param startedTimeoutMilliseconds   最后一个作业执行前的执行方法的超时时间 单位：毫秒
-     * @param completedTimeoutMilliseconds 最后一个作业执行后的执行方法的超时时间 单位：毫秒
-     * @return AbstractDistributeOnceElasticJobListener
-     */
-    private AbstractDistributeOnceElasticJobListener registerAbstractDistributeOnceElasticJobListener(Class<? extends AbstractDistributeOnceElasticJobListener> distributedListener,
+    private AbstractDistributeOnceElasticJobListener registerAbstractDistributeOnceElasticJobListener(String distributedListenerClass,
                                                                                                       long startedTimeoutMilliseconds,
                                                                                                       long completedTimeoutMilliseconds) {
-        BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.rootBeanDefinition(distributedListener);
-        beanDefinitionBuilder.setScope(BeanDefinition.SCOPE_PROTOTYPE);
-        beanDefinitionBuilder.addConstructorArgValue(startedTimeoutMilliseconds);
-        beanDefinitionBuilder.addConstructorArgValue(completedTimeoutMilliseconds);
-        getDefaultListableBeanFactory().registerBeanDefinition(distributedListener.getSimpleName(), beanDefinitionBuilder.getBeanDefinition());
-        return applicationContext.getBean(distributedListener.getSimpleName(), distributedListener);
+        ///判断是否配置了监听者
+        if (StringUtils.isBlank(distributedListenerClass)) {
+            return null;
+        }
+
+        //判断监听者是否已经在spring容器中存在
+        if (applicationContext.containsBean(distributedListenerClass)) {
+            return applicationContext.getBean(distributedListenerClass, AbstractDistributeOnceElasticJobListener.class);
+        }
+
+        //不存在则创建并注册到Spring容器中
+        try {
+            Class<? extends AbstractDistributeOnceElasticJobListener> distributedListener = (Class<? extends AbstractDistributeOnceElasticJobListener>) Class.forName(distributedListenerClass);
+            BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.rootBeanDefinition(distributedListener);
+            beanDefinitionBuilder.setScope(BeanDefinition.SCOPE_PROTOTYPE);
+            beanDefinitionBuilder.addConstructorArgValue(startedTimeoutMilliseconds);
+            beanDefinitionBuilder.addConstructorArgValue(completedTimeoutMilliseconds);
+            getDefaultListableBeanFactory().registerBeanDefinition(distributedListener.getSimpleName(), beanDefinitionBuilder.getBeanDefinition());
+            return applicationContext.getBean(distributedListener.getSimpleName(), distributedListener);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(MessageFormat.format("ClassNotFound: {0}!", distributedListenerClass));
+        } catch (Exception ex) {
+            throw new RuntimeException(MessageFormat.format("{0} must extends ElasticJobListener!", distributedListenerClass));
+        }
     }
 
     /**
@@ -315,6 +320,59 @@ public class ElasticJobAutoConfiguration {
      */
     private DefaultListableBeanFactory getDefaultListableBeanFactory() {
         return (DefaultListableBeanFactory) ((ConfigurableApplicationContext) applicationContext).getBeanFactory();
+    }
+
+    /**
+     * 解析配置值
+     *
+     * @param strVal 配置key
+     * @return String
+     */
+    private String resolver(String strVal) {
+        return embeddedValueResolver.resolveStringValue(strVal);
+    }
+
+    /**
+     * 解析配置值
+     *
+     * @param strVal 配置key
+     * @return int
+     */
+    private int resolver2Int(String strVal) {
+        String resolverVal = resolver(strVal);
+        try {
+            return Integer.parseInt(resolverVal);
+        } catch (NumberFormatException e) {
+            throw new RuntimeException(MessageFormat.format("[{0}] resolver2Int [{1}] error: {2}!", strVal, resolverVal, e.getMessage()));
+        }
+    }
+
+    /**
+     * 解析配置值
+     *
+     * @param strVal 配置key
+     * @return boolean
+     */
+    private boolean resolver2Boolean(String strVal) {
+        return Boolean.parseBoolean(resolver(strVal));
+    }
+
+    /**
+     * 解析配置值
+     *
+     * @param strVal 配置key
+     * @return long
+     */
+    private long resolver2Long(String strVal) {
+        String resolverVal = resolver(strVal);
+        if (StringUtils.isBlank(resolverVal)) {
+            return Long.MAX_VALUE;
+        }
+        try {
+            return Long.parseLong(resolverVal);
+        } catch (NumberFormatException e) {
+            throw new RuntimeException(MessageFormat.format("[{0}] resolver2Long [{1}] error: {2}!", strVal, resolverVal, e.getMessage()));
+        }
     }
 
 }

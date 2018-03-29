@@ -5,7 +5,7 @@
 
     <groupId>com.github.xjzrc.spring.boot</groupId>
     <artifactId>elastic-job-lite-spring-boot-starter</artifactId>
-    <version>1.0.1</version>
+    <version>1.1.0</version>
     <packaging>jar</packaging>
 
     <name>elastic-job-lite-spring-boot-starter</name>
