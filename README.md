@@ -9,27 +9,41 @@
 
 * 在`spring boot`项目的`pom.xml`中添加以下依赖：
 
-根据实际情况依赖最新版本
+根据实际情况依赖最新版本(当前最新版1.1.0)
 ```xml
 <dependency>
     <groupId>com.github.xjzrc.spring.boot</groupId>
     <artifactId>elastic-job-lite-spring-boot-starter</artifactId>
-    <version>1.0.0</version>
+    <version>${lasted.release.version}</version>
 </dependency>
 ```
 
 * 在application.properties添加elasticjob的相关配置信息,样例配置如下:
 
 ```properties
+#注册中心配置
 spring.elasticjob.zookeeper.serverLists=127.0.0.1:2181
 spring.elasticjob.zookeeper.namespace=elastic-job-spring-boot-stater-demo
+#simple作业配置
+simpleJob.cron=0/2 * * * * ?
+simpleJob.shardingTotalCount=3
+simpleJob.shardingItemParameters='0=Beijing,1=Shanghai,2=Guangzhou'
+#dataflow作业配置
+dataflowJob.cron=0/2 * * * * ?
+dataflowJob.shardingTotalCount=3
+dataflowJob.shardingItemParameters='0=Beijing,1=Shanghai,2=Guangzhou'
+#script作业配置
+scriptJob.cron=0/2 * * * * ?
+scriptJob.shardingTotalCount=3
+scriptJob.shardingItemParameters='0=Beijing,1=Shanghai,2=Guangzhou'
+scriptJob.scriptCommandLine=yourPath/spring-boot-starter-demo/elastic-job-spring-boot-starter-demo/src/main/resources/script/demo.sh
 ```
 
 * 编写你的作业服务,只需在作业任务类上添加`@ElasticJobConfig`（import com.zen.elasticjob.spring.boot.annotation.ElasticJobConfig）注解 ,其中cron是作业执行时间.
 
 Simple作业配置
 ```java
-@ElasticJobConfig(cron = "0/2 * * * * ?", shardingTotalCount = 3, shardingItemParameters = "0=Beijing,1=Shanghai,2=Guangzhou")
+@ElasticJobConfig(cron = "${simpleJob.cron}", shardingTotalCount = "${simpleJob.shardingTotalCount}", shardingItemParameters = "${simpleJob.shardingItemParameters}")
 public class SpringSimpleJob implements SimpleJob {
 
     @Resource
@@ -49,7 +63,7 @@ public class SpringSimpleJob implements SimpleJob {
 
 dataflow作业配置
 ```java
-@ElasticJobConfig(cron = "0/2 * * * * ?", shardingTotalCount = 3, shardingItemParameters = "0=Beijing,1=Shanghai,2=Guangzhou")
+@ElasticJobConfig(cron = "${dataflowJob.cron}", shardingTotalCount = "${dataflowJob.shardingTotalCount}", shardingItemParameters = "${dataflowJob.shardingItemParameters}")
 public class SpringDataflowJob implements DataflowJob<Foo> {
 
     @Resource
@@ -74,9 +88,9 @@ public class SpringDataflowJob implements DataflowJob<Foo> {
 ```
 script作业配置(# need absolute path)
 ```java
-@ElasticJobConfig(cron = "0/2 * * * * ?", shardingTotalCount = 3,
-        shardingItemParameters = "0=Beijing,1=Shanghai,2=Guangzhou",
-        scriptCommandLine = "yourPath/spring-boot-starter-demo/elastic-job-spring-boot-starter-demo/src/main/resources/script/demo.sh")
+@ElasticJobConfig(cron = "${scriptJob.cron}", shardingTotalCount = "${scriptJob.shardingTotalCount}",
+        shardingItemParameters = "${scriptJob.shardingItemParameters}",
+        scriptCommandLine = "${scriptJob.cron}")
 public class SpringScripJob implements ScriptJob {
 }
 ```
