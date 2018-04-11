@@ -22,21 +22,21 @@
 
 ```properties
 #注册中心配置
-spring.elasticjob.zookeeper.serverLists=127.0.0.1:2181
-spring.elasticjob.zookeeper.namespace=elastic-job-spring-boot-stater-demo
+spring.elasticjob.zookeeper.serverLists = 127.0.0.1:2181
+spring.elasticjob.zookeeper.namespace = elastic-job-spring-boot-stater-demo
 #simple作业配置
-simpleJob.cron=0/2 * * * * ?
-simpleJob.shardingTotalCount=3
-simpleJob.shardingItemParameters='0=Beijing,1=Shanghai,2=Guangzhou'
+simpleJob.cron = 0/2 * * * * ?
+simpleJob.shardingTotalCount = 3
+simpleJob.shardingItemParameters = 0=Beijing,1=Shanghai,2=Guangzhou
 #dataflow作业配置
-dataflowJob.cron=0/2 * * * * ?
-dataflowJob.shardingTotalCount=3
-dataflowJob.shardingItemParameters='0=Beijing,1=Shanghai,2=Guangzhou'
+dataflowJob.cron = 0/2 * * * * ?
+dataflowJob.shardingTotalCount = 3
+dataflowJob.shardingItemParameters = 0=Beijing,1=Shanghai,2=Guangzhou
 #script作业配置
-scriptJob.cron=0/2 * * * * ?
-scriptJob.shardingTotalCount=3
-scriptJob.shardingItemParameters='0=Beijing,1=Shanghai,2=Guangzhou'
-scriptJob.scriptCommandLine=yourPath/spring-boot-starter-demo/elastic-job-spring-boot-starter-demo/src/main/resources/script/demo.sh
+scriptJob.cron = 0/2 * * * * ?
+scriptJob.shardingTotalCount = 3
+scriptJob.shardingItemParameters = 0=Beijing,1=Shanghai,2=Guangzhou
+scriptJob.scriptCommandLine = yourPath/spring-boot-starter-demo/elastic-job-spring-boot-starter-demo/src/main/resources/script/demo.sh
 ```
 
 * 编写你的作业服务,只需在作业任务类上添加`@ElasticJobConfig`（import com.zen.elasticjob.spring.boot.annotation.ElasticJobConfig）注解 ,其中cron是作业执行时间.
