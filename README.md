@@ -77,25 +77,31 @@ spring:
     simples:
       #spring简单作业示例配置
       spring-simple-job:
-        jobClass: com.zen.spring.boot.demo.elasticjob.job.SpringSimpleJob
+        #配置简单作业，必须实现com.dangdang.ddframe.job.api.simple.SimpleJob
+        job-class: com.zen.spring.boot.demo.elasticjob.job.SpringSimpleJob
         cron: 0/2 * * * * ?
         sharding-total-count: 3
         sharding-item-parameters: 0=Beijing,1=Shanghai,2=Guangzhou
+        #配置监听器
         listener:
+          #配置每台作业节点均执行的监听，必须实现com.dangdang.ddframe.job.lite.api.listener.ElasticJobListener
           listener-class: com.zen.spring.boot.demo.elasticjob.listener.MyElasticJobListener
     #流式作业配置
     dataflows:
       #spring简单作业示例配置
       spring-dataflow-job:
-        jobClass: com.zen.spring.boot.demo.elasticjob.job.SpringDataflowJob
+        #配置简单作业，必须实现com.dangdang.ddframe.job.api.dataflow.DataflowJob<T>
+        job-class: com.zen.spring.boot.demo.elasticjob.job.SpringDataflowJob
         cron: 0/2 * * * * ?
         sharding-total-count: 3
         sharding-item-parameters: 0=Beijing,1=Shanghai,2=Guangzhou
         streaming-process: true
+        #配置监听器
         listener:
-          distributedListenerClass: com.zen.spring.boot.demo.elasticjob.listener.MyDistributeElasticJobListener
-          startedTimeoutMilliseconds: 5000
-          completedTimeoutMilliseconds: 10000
+          #配置分布式场景中仅单一节点执行的监听，必须实现com.dangdang.ddframe.job.lite.api.listener.AbstractDistributeOnceElasticJobListener
+          distributed-listener-class: com.zen.spring.boot.demo.elasticjob.listener.MyDistributeElasticJobListener
+          started-timeout-milliseconds: 5000
+          completed-timeout-milliseconds: 10000
     #脚本作业配置
     scripts:
       #脚本作业示例配置
