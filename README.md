@@ -9,7 +9,7 @@
 
 * 在`spring boot`项目的`pom.xml`中添加以下依赖：
 
-根据实际情况依赖最新版本(当前最新版1.1.0)
+根据实际情况依赖最新版本(当前最新版2.0.0)
 ```xml
 <dependency>
     <groupId>com.github.xjzrc.spring.boot</groupId>
@@ -18,33 +18,11 @@
 </dependency>
 ```
 
-* 在application.properties添加elasticjob的相关配置信息,样例配置如下:
-
-```properties
-#注册中心配置
-spring.elasticjob.zookeeper.serverLists = 127.0.0.1:2181
-spring.elasticjob.zookeeper.namespace = elastic-job-spring-boot-stater-demo
-#simple作业配置
-simpleJob.cron = 0/2 * * * * ?
-simpleJob.shardingTotalCount = 3
-simpleJob.shardingItemParameters = 0=Beijing,1=Shanghai,2=Guangzhou
-#dataflow作业配置
-dataflowJob.cron = 0/2 * * * * ?
-dataflowJob.shardingTotalCount = 3
-dataflowJob.shardingItemParameters = 0=Beijing,1=Shanghai,2=Guangzhou
-#script作业配置
-scriptJob.cron = 0/2 * * * * ?
-scriptJob.shardingTotalCount = 3
-scriptJob.shardingItemParameters = 0=Beijing,1=Shanghai,2=Guangzhou
-scriptJob.scriptCommandLine = yourPath/spring-boot-starter-demo/elastic-job-spring-boot-starter-demo/src/main/resources/script/demo.sh
-```
-
-* 编写你的作业服务,只需在作业任务类上添加`@ElasticJobConfig`（import com.zen.elasticjob.spring.boot.annotation.ElasticJobConfig）注解 ,其中cron是作业执行时间.
+* 编写你的作业服务
 
 Simple作业配置
 ```java
-@ElasticJobConfig(cron = "${simpleJob.cron}", shardingTotalCount = "${simpleJob.shardingTotalCount}", shardingItemParameters = "${simpleJob.shardingItemParameters}")
-public class SpringSimpleJob implements SimpleJob {
+public class SpringSimpleJob implements com.dangdang.ddframe.job.api.simple.SimpleJob {
 
     @Resource
     private FooRepository fooRepository;
@@ -63,8 +41,7 @@ public class SpringSimpleJob implements SimpleJob {
 
 dataflow作业配置
 ```java
-@ElasticJobConfig(cron = "${dataflowJob.cron}", shardingTotalCount = "${dataflowJob.shardingTotalCount}", shardingItemParameters = "${dataflowJob.shardingItemParameters}")
-public class SpringDataflowJob implements DataflowJob<Foo> {
+public class SpringDataflowJob implements com.dangdang.ddframe.job.api.dataflow.DataflowJob<Foo> {
 
     @Resource
     private FooRepository fooRepository;
@@ -86,11 +63,45 @@ public class SpringDataflowJob implements DataflowJob<Foo> {
     }
 }
 ```
-script作业配置(# need absolute path)
-```java
-@ElasticJobConfig(cron = "${scriptJob.cron}", shardingTotalCount = "${scriptJob.shardingTotalCount}",
-        shardingItemParameters = "${scriptJob.shardingItemParameters}",
-        scriptCommandLine = "${scriptJob.cron}")
-public class SpringScripJob implements ScriptJob {
-}
+
+* 在application.yml添加elasticjob的相关配置信息,样例配置如下:
+
+```yml
+spring:
+  elasticjob:
+    #注册中心配置
+    zookeeper:
+      server-lists: 127.0.0.1:6181
+      namespace: elastic-job-spring-boot-stater-demo
+    #简单作业配置
+    simples:
+      #spring简单作业示例配置
+      spring-simple-job:
+        jobClass: com.zen.spring.boot.demo.elasticjob.job.SpringSimpleJob
+        cron: 0/2 * * * * ?
+        sharding-total-count: 3
+        sharding-item-parameters: 0=Beijing,1=Shanghai,2=Guangzhou
+        listener:
+          listener-class: com.zen.spring.boot.demo.elasticjob.listener.MyElasticJobListener
+    #流式作业配置
+    dataflows:
+      #spring简单作业示例配置
+      spring-dataflow-job:
+        jobClass: com.zen.spring.boot.demo.elasticjob.job.SpringDataflowJob
+        cron: 0/2 * * * * ?
+        sharding-total-count: 3
+        sharding-item-parameters: 0=Beijing,1=Shanghai,2=Guangzhou
+        streaming-process: true
+        listener:
+          distributedListenerClass: com.zen.spring.boot.demo.elasticjob.listener.MyDistributeElasticJobListener
+          startedTimeoutMilliseconds: 5000
+          completedTimeoutMilliseconds: 10000
+    #脚本作业配置
+    scripts:
+      #脚本作业示例配置
+      script-job:
+        cron: 0/2 * * * * ?
+        sharding-total-count: 3
+        sharding-item-parameters: 0=Beijing,1=Shanghai,2=Guangzhou
+        script-command-line: youPath/spring-boot-starter-demo/elastic-job-spring-boot-starter-demo/src/main/resources/script/demo.bat
 ```
