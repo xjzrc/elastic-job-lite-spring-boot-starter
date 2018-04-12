@@ -65,7 +65,7 @@ public class SpringDataflowJob implements com.dangdang.ddframe.job.api.dataflow.
 ```
 
 * 在application.yml添加elasticjob的相关配置信息,样例配置如下:
-
+具体配置请参照http://elasticjob.io/docs/elastic-job-lite/02-guide/config-manual/配置。
 ```yml
 spring:
   elasticjob:
